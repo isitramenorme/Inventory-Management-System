@@ -1,0 +1,86 @@
+{% import 'partials/icons.html' as ui %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="StockFlow - lightweight inventory and stock management for small businesses.">
+  <title>{{ page_title|default('Dashboard') }} &middot; {{ config.APP_NAME }}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <div class="app">
+
+    {% include 'partials/sidebar.html' %}
+
+    <div class="app__main">
+
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="topbar__left">
+          <button class="icon-btn topbar__menu" type="button" data-sidebar-toggle
+                  aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+            {{ ui.icon('menu', 22) }}
+          </button>
+
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <span class="breadcrumb__root">{{ config.APP_NAME }}</span>
+            {{ ui.icon('chevron-right', 14, 'breadcrumb__sep') }}
+            <span class="breadcrumb__current">{{ page_title|default('Dashboard') }}</span>
+          </nav>
+        </div>
+
+        <div class="topbar__right">
+          <span class="chip chip--stage">
+            {{ ui.icon('check', 14) }} Inventory management
+          </span>
+
+          <span class="chip chip--date">
+            {{ ui.icon('calendar', 15) }}
+            <span class="js-today">{{ today.strftime('%d %b %Y') }}</span>
+          </span>
+
+          <div class="user">
+            <span class="user__avatar" aria-hidden="true">A</span>
+            <span class="user__meta">
+              <strong>Administrator</strong>
+              <small>Store owner</small>
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page content -->
+      <main class="page" id="main-content">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="flash flash--{{ category }}" role="status">
+                  <span class="flash__icon">
+                    {% if category == 'error' %}{{ ui.icon('alert', 17) }}{% else %}{{ ui.icon('check', 17) }}{% endif %}
+                  </span>
+                  <p class="flash__text">{{ message }}</p>
+                  <button class="flash__close" type="button" aria-label="Dismiss"
+                          onclick="this.parentElement.remove()">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+
+    </div><!-- /.app__main -->
+  </div><!-- /.app -->
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Procurement</p>
+      <h1 class="page-head__title">New purchase order</h1>
+      <p class="page-head__subtitle">Choose a supplier and add the products you want to order.</p>
+    </div>
+  </div>
+
+  <form method="post" class="form-card">
+    <div class="form-card__head">
+      <h2>Order details</h2>
+      <p>The order starts as a draft. You can mark it as ordered and receive stock later.</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="supplier_id">Supplier <span class="req">*</span></label>
+        <select class="input" id="supplier_id" name="supplier_id" required>
+          <option value="">Select a supplier</option>
+          {% for supplier in suppliers %}
+            <option value="{{ supplier.id }}" {% if form.supplier_id == supplier.id|string %}selected{% endif %}>
+              {{ supplier.name }}
+            </option>
+          {% endfor %}
+        </select>
+        {% if not suppliers %}
+          <p class="hint">No suppliers yet. <a href="{{ url_for('suppliers.create') }}">Add one first</a>.</p>
+        {% endif %}
+      </div>
+
+      <div class="field">
+        <label for="expected_date">Expected date</label>
+        <input class="input" id="expected_date" name="expected_date" type="date"
+               value="{{ form.expected_date }}">
+      </div>
+
+      <div class="field field--full">
+        <label for="notes">Notes</label>
+        <textarea class="input" id="notes" name="notes" rows="2"
+                  placeholder="Optional delivery instructions">{{ form.notes }}</textarea>
+      </div>
+    </div>
+
+    <div class="items-editor">
+      <div class="items-editor__head">
+        <div>
+          <h3>Order items</h3>
+          <p>Add at least one product.</p>
+        </div>
+        <button class="btn btn--ghost btn--sm" type="button" id="addItem">+ Add item</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table table--form">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="is-num">Quantity</th>
+              <th class="is-num">Unit cost</th>
+              <th class="is-num">Line total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody">
+            <tr class="item-row">
+              <td>
+                <select class="input input--sm item-product" name="product_id">
+                  <option value="">Select product</option>
+                  {% for product in products %}
+                    <option value="{{ product.id }}" data-cost="{{ product.cost_price }}">
+                      {{ product.name }} ({{ product.sku }})
+                    </option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td class="is-num">
+                <input class="input input--sm item-qty" name="quantity" type="number" min="1" value="1">
+              </td>
+              <td class="is-num">
+                <input class="input input--sm item-cost" name="unit_cost" type="number" min="0" step="0.01" value="0">
+              </td>
+              <td class="is-num item-total">0.00</td>
+              <td class="is-actions">
+                <button class="icon-btn icon-btn--sm item-remove" type="button" aria-label="Remove item">&times;</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="items-editor__total">
+        <span>Estimated total</span>
+        <strong id="orderTotal">0.00</strong>
+      </div>
+    </div>
+
+    <div class="form-card__foot">
+      <a class="btn btn--ghost" href="{{ url_for('purchase_orders.index') }}">Cancel</a>
+      <button class="btn" type="submit">Create purchase order</button>
+    </div>
+  </form>
+
+  <template id="itemRowTemplate">
+    <tr class="item-row">
+      <td>
+        <select class="input input--sm item-product" name="product_id">
+          <option value="">Select product</option>
+          {% for product in products %}
+            <option value="{{ product.id }}" data-cost="{{ product.cost_price }}">
+              {{ product.name }} ({{ product.sku }})
+            </option>
+          {% endfor %}
+        </select>
+      </td>
+      <td class="is-num">
+        <input class="input input--sm item-qty" name="quantity" type="number" min="1" value="1">
+      </td>
+      <td class="is-num">
+        <input class="input input--sm item-cost" name="unit_cost" type="number" min="0" step="0.01" value="0">
+      </td>
+      <td class="is-num item-total">0.00</td>
+      <td class="is-actions">
+        <button class="icon-btn icon-btn--sm item-remove" type="button" aria-label="Remove item">&times;</button>
+      </td>
+    </tr>
+  </template>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    (function () {
+      var CURRENCY = {{ currency_symbol()|tojson }};
+      var body = document.getElementById("itemsBody");
+      var template = document.getElementById("itemRowTemplate");
+      var addButton = document.getElementById("addItem");
+      var totalLabel = document.getElementById("orderTotal");
+
+      function rowTotal(row) {
+        var qty = parseFloat(row.querySelector(".item-qty").value) || 0;
+        var cost = parseFloat(row.querySelector(".item-cost").value) || 0;
+        var total = qty * cost;
+        row.querySelector(".item-total").textContent = CURRENCY + total.toFixed(2);
+        return total;
+      }
+
+      function recalc() {
+        var total = 0;
+        body.querySelectorAll(".item-row").forEach(function (row) {
+          total += rowTotal(row);
+        });
+        totalLabel.textContent = CURRENCY + total.toFixed(2);
+      }
+
+      function syncRow(event) {
+        var row = event.target.closest(".item-row");
+        if (!row) return;
+        if (event.target.classList.contains("item-product")) {
+          var option = event.target.selectedOptions[0];
+          if (option && option.getAttribute("data-cost")) {
+            row.querySelector(".item-cost").value = option.getAttribute("data-cost");
+          }
+        }
+        recalc();
+      }
+
+      body.addEventListener("input", syncRow);
+      body.addEventListener("change", syncRow);
+
+      body.addEventListener("click", function (event) {
+        if (!event.target.classList.contains("item-remove")) return;
+        var rows = body.querySelectorAll(".item-row");
+        var row = event.target.closest(".item-row");
+        if (rows.length > 1) {
+          row.remove();
+        } else {
+          row.querySelector(".item-product").value = "";
+          row.querySelector(".item-qty").value = "1";
+          row.querySelector(".item-cost").value = "0";
+        }
+        recalc();
+      });
+
+      addButton.addEventListener("click", function () {
+        body.appendChild(template.content.firstElementChild.cloneNode(true));
+        recalc();
+      });
+
+      recalc();
+    })();
+  </script>
+{% endblock %}

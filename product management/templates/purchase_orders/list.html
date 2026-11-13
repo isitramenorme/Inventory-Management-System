@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Procurement</p>
+      <h1 class="page-head__title">Purchase orders</h1>
+      <p class="page-head__subtitle">Raise orders with suppliers and receive stock when it arrives.</p>
+    </div>
+    <div class="page-head__actions">
+      <a class="btn" href="{{ url_for('purchase_orders.create') }}">+ New purchase order</a>
+    </div>
+  </div>
+
+  <section class="card card--flush">
+    {% if orders %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Supplier</th>
+              <th>Created</th>
+              <th>Expected</th>
+              <th class="is-num">Items</th>
+              <th class="is-num">Total</th>
+              <th>Status</th>
+              <th class="is-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+              <tr>
+                <td><span class="cell-product__name">{{ order.po_number }}</span></td>
+                <td class="is-muted">{{ order.supplier_name or 'Supplier removed' }}</td>
+                <td class="is-muted">{{ order.created_at|datefmt }}</td>
+                <td class="is-muted">{{ order.expected_date|datefmt if order.expected_date else '—' }}</td>
+                <td class="is-num">{{ order.item_count }}</td>
+                <td class="is-num">{{ order.total_amount|money }}</td>
+                <td>
+                  <span class="pill
+                    {% if order.status == 'received' %}pill--dark
+                    {% elif order.status == 'ordered' %}pill--outline
+                    {% elif order.status == 'cancelled' %}pill--muted
+                    {% else %}pill--plain{% endif %}">
+                    {{ status_labels[order.status] }}
+                  </span>
+                </td>
+                <td class="is-actions">
+                  <a class="btn btn--ghost btn--sm" href="{{ url_for('purchase_orders.detail', order_id=order.id) }}">View</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        <span class="empty__icon">{{ ui.icon('file', 22) }}</span>
+        <p class="empty__title">No purchase orders yet</p>
+        <p class="empty__text">Create an order to restock products from a supplier.</p>
+        <p class="empty__action"><a class="btn btn--sm" href="{{ url_for('purchase_orders.create') }}">+ New purchase order</a></p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

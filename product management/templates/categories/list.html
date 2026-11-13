@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Inventory</p>
+      <h1 class="page-head__title">Categories</h1>
+      <p class="page-head__subtitle">Group products to keep the catalogue organised.</p>
+    </div>
+  </div>
+
+  <div class="split">
+    <form method="post" action="{{ url_for('categories.save') }}" class="form-card form-card--side">
+      <div class="form-card__head">
+        <h2>{{ 'Edit category' if editing else 'New category' }}</h2>
+        <p>{{ 'Rename this category or update its description.' if editing else 'Add a category for your products.' }}</p>
+      </div>
+
+      {% if editing %}<input type="hidden" name="id" value="{{ editing.id }}">{% endif %}
+
+      <div class="form-grid form-grid--single">
+        <div class="field">
+          <label for="name">Name <span class="req">*</span></label>
+          <input class="input" id="name" name="name" required maxlength="80"
+                 value="{{ editing.name if editing else '' }}">
+        </div>
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea class="input" id="description" name="description" rows="3">{{ editing.description if editing and editing.description else '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-card__foot">
+        {% if editing %}
+          <a class="btn btn--ghost" href="{{ url_for('categories.index') }}">Cancel</a>
+          <button class="btn" type="submit">Save changes</button>
+        {% else %}
+          <button class="btn" type="submit">Add category</button>
+        {% endif %}
+      </div>
+    </form>
+
+    <section class="card card--flush">
+      {% if categories %}
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th class="is-num">Products</th>
+                <th class="is-num">Units</th>
+                <th class="is-num">Stock value</th>
+                <th class="is-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for category in categories %}
+                <tr>
+                  <td>
+                    <span class="cell-product__name">{{ category.name }}</span>
+                    {% if category.description %}
+                      <span class="cell-product__sku">{{ category.description }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="is-num">{{ category.product_count }}</td>
+                  <td class="is-num">{{ category.units }}</td>
+                  <td class="is-num">{{ category.stock_value|money }}</td>
+                  <td class="is-actions">
+                    <div class="row-actions">
+                      <a class="btn btn--ghost btn--sm" href="{{ url_for('categories.index', edit=category.id) }}">Edit</a>
+                      <form method="post" action="{{ url_for('categories.delete', category_id=category.id) }}"
+                            onsubmit="return confirm('Delete {{ category.name|e }}? Its products will become uncategorised.');">
+                        <button class="btn btn--quiet btn--sm" type="submit">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty">
+          <span class="empty__icon">{{ ui.icon('tag', 22) }}</span>
+          <p class="empty__title">No categories yet</p>
+          <p class="empty__text">Use the form to add your first category.</p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

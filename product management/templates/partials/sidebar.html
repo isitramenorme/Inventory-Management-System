@@ -1,0 +1,64 @@
+{% import 'partials/icons.html' as ui %}
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+
+  <!-- Brand -->
+  <div class="brand">
+    <span class="brand__mark">{{ ui.icon('box', 22) }}</span>
+    <span class="brand__text">
+      <strong>{{ config.APP_NAME }}</strong>
+      <small>{{ config.APP_TAGLINE }}</small>
+    </span>
+    <button class="sidebar__close" type="button" data-sidebar-close aria-label="Close navigation">
+      {{ ui.icon('close', 20) }}
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <p class="nav__label">Overview</p>
+    <a class="nav__link {% if active_page == 'dashboard' %}is-active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
+      {{ ui.icon('grid') }}<span>Dashboard</span>
+    </a>
+
+    <p class="nav__label">Inventory</p>
+    <a class="nav__link {% if active_page == 'products' %}is-active{% endif %}" href="{{ url_for('products.index') }}">
+      {{ ui.icon('box') }}<span>Products</span>
+    </a>
+    <a class="nav__link {% if active_page == 'categories' %}is-active{% endif %}" href="{{ url_for('categories.index') }}">
+      {{ ui.icon('tag') }}<span>Categories</span>
+    </a>
+    <a class="nav__link {% if active_page == 'stock' %}is-active{% endif %}" href="{{ url_for('stock.index') }}">
+      {{ ui.icon('swap') }}<span>Stock Movements</span>
+    </a>
+
+    <p class="nav__label">Procurement</p>
+    <a class="nav__link {% if active_page == 'suppliers' %}is-active{% endif %}" href="{{ url_for('suppliers.index') }}">
+      {{ ui.icon('truck') }}<span>Suppliers</span>
+    </a>
+    <a class="nav__link {% if active_page == 'purchase_orders' %}is-active{% endif %}" href="{{ url_for('purchase_orders.index') }}">
+      {{ ui.icon('file') }}<span>Purchase Orders</span>
+    </a>
+
+    <p class="nav__label">Insights</p>
+    <a class="nav__link {% if active_page == 'transactions' %}is-active{% endif %}" href="{{ url_for('transactions.index') }}">
+      {{ ui.icon('receipt') }}<span>Transactions</span>
+    </a>
+    <a class="nav__link {% if active_page == 'reports' %}is-active{% endif %}" href="{{ url_for('reports.index') }}">
+      {{ ui.icon('chart') }}<span>Reports</span>
+    </a>
+  </nav>
+
+  <!-- Footer -->
+  <div class="sidebar__footer">
+    <div class="db-status">
+      <span class="db-status__dot" aria-hidden="true"></span>
+      <div class="db-status__text">
+        <strong>Database connected</strong>
+        <span>SQLite &middot; instance/inventory.db</span>
+      </div>
+    </div>
+    <p class="sidebar__version">v{{ config.APP_VERSION }} &middot; Local data</p>
+  </div>
+</aside>
+
+<div class="sidebar-overlay" data-sidebar-close aria-hidden="true"></div>

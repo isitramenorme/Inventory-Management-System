@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Purchase order</p>
+      <h1 class="page-head__title">{{ order.po_number }}</h1>
+      <p class="page-head__subtitle">
+        Created {{ order.created_at|datefmt }} &middot; {{ status_labels[order.status] }}
+      </p>
+    </div>
+    <div class="page-head__actions">
+      {% if order.status in ('draft', 'ordered') %}
+        <form method="post" action="{{ url_for('purchase_orders.update_status', order_id=order.id) }}"
+              onsubmit="return confirm('Receive this order and add the items to stock?');">
+          <input type="hidden" name="action" value="receive">
+          <button class="btn" type="submit">Receive stock</button>
+        </form>
+      {% endif %}
+      <a class="btn btn--ghost" href="{{ url_for('purchase_orders.index') }}">Back to orders</a>
+    </div>
+  </div>
+
+  <div class="split split--even">
+    <section class="card">
+      <header class="card__head">
+        <div>
+          <h2 class="card__title">Order information</h2>
+          <p class="card__subtitle">Supplier and delivery details</p>
+        </div>
+        <span class="pill
+          {% if order.status == 'received' %}pill--dark
+          {% elif order.status == 'ordered' %}pill--outline
+          {% elif order.status == 'cancelled' %}pill--muted
+          {% else %}pill--plain{% endif %}">
+          {{ status_labels[order.status] }}
+        </span>
+      </header>
+
+      <dl class="detail-list">
+        <div><dt>Supplier</dt><dd>{{ order.supplier_name or 'Supplier removed' }}</dd></div>
+        <div><dt>Contact person</dt><dd>{{ order.contact_person or '—' }}</dd></div>
+        <div><dt>Email</dt><dd>{{ order.email or '—' }}</dd></div>
+        <div><dt>Phone</dt><dd>{{ order.phone or '—' }}</dd></div>
+        <div><dt>Order date</dt><dd>{{ order.order_date|datefmt }}</dd></div>
+        <div><dt>Expected date</dt><dd>{{ order.expected_date|datefmt if order.expected_date else '—' }}</dd></div>
+        <div class="detail-list__full"><dt>Notes</dt><dd>{{ order.notes or '—' }}</dd></div>
+      </dl>
+
+      {% if order.status in ('draft', 'ordered') %}
+        <div class="card__foot">
+          <form method="post" action="{{ url_for('purchase_orders.update_status', order_id=order.id) }}"
+                onsubmit="return confirm('Cancel this purchase order?');">
+            <input type="hidden" name="action" value="cancel">
+            <button class="btn btn--quiet btn--sm" type="submit">Cancel order</button>
+          </form>
+          {% if order.status == 'draft' %}
+            <form method="post" action="{{ url_for('purchase_orders.update_status', order_id=order.id) }}">
+              <input type="hidden" name="action" value="order">
+              <button class="btn btn--ghost btn--sm" type="submit">Mark as ordered</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <header class="card__head">
+        <div>
+          <h2 class="card__title">Summary</h2>
+          <p class="card__subtitle">{{ items|length }} item{{ '' if items|length == 1 else 's' }} on this order</p>
+        </div>
+      </header>
+
+      <dl class="detail-list detail-list--single">
+        <div><dt>Items</dt><dd>{{ items|length }}</dd></div>
+        <div><dt>Units</dt><dd>{{ items|sum(attribute='quantity') }}</dd></div>
+        <div><dt>Total value</dt><dd class="detail-list__strong">{{ order.total_amount|money }}</dd></div>
+      </dl>
+
+      <div class="note-box note-box--tight">
+        {% if order.status == 'received' %}
+          Stock has been added for every item on this order.
+        {% elif order.status == 'cancelled' %}
+          This order was cancelled and will not affect stock.
+        {% else %}
+          Receiving this order adds every item to stock and records the purchases.
+        {% endif %}
+      </div>
+    </section>
+  </div>
+
+  <section class="card card--flush">
+    <header class="card__head card__head--padded">
+      <div>
+        <h2 class="card__title">Items</h2>
+        <p class="card__subtitle">Products included in this purchase order</p>
+      </div>
+    </header>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th class="is-num">Quantity</th>
+            <th class="is-num">Unit cost</th>
+            <th class="is-num">Line total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+            <tr>
+              <td>
+                <span class="cell-product__name">{{ item.product_name }}</span>
+                <span class="cell-product__sku">{{ item.sku }}</span>
+              </td>
+              <td class="is-num">{{ item.quantity }} <span class="is-muted">{{ item.unit }}</span></td>
+              <td class="is-num">{{ item.unit_cost|money }}</td>
+              <td class="is-num"><strong>{{ item.line_total|money }}</strong></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="is-num is-muted">Order total</td>
+            <td class="is-num"><strong>{{ order.total_amount|money }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+{% endblock %}

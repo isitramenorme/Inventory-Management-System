@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Inventory</p>
+      <h1 class="page-head__title">Products</h1>
+      <p class="page-head__subtitle">Manage your catalogue, pricing and stock levels.</p>
+    </div>
+    <div class="page-head__actions">
+      <a class="btn" href="{{ url_for('products.create') }}">+ Add product</a>
+    </div>
+  </div>
+
+  <form class="toolbar" method="get" action="{{ url_for('products.index') }}">
+    <input class="input toolbar__search" type="search" name="q" value="{{ search }}"
+           placeholder="Search by name or SKU" aria-label="Search products">
+    <select class="input toolbar__select" name="category" aria-label="Filter by category">
+      <option value="">All categories</option>
+      {% for category in categories %}
+        <option value="{{ category.id }}" {% if category_id == category.id|string %}selected{% endif %}>
+          {{ category.name }}
+        </option>
+      {% endfor %}
+    </select>
+    <select class="input toolbar__select" name="stock" aria-label="Filter by stock level">
+      <option value="">All stock levels</option>
+      <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>Low stock</option>
+      <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>Out of stock</option>
+    </select>
+    <button class="btn btn--ghost" type="submit">Filter</button>
+    {% if search or category_id or stock_filter %}
+      <a class="link-muted" href="{{ url_for('products.index') }}">Reset</a>
+    {% endif %}
+  </form>
+
+  <section class="card card--flush">
+    {% if products %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Category</th>
+              <th>Supplier</th>
+              <th class="is-num">Cost</th>
+              <th class="is-num">Selling</th>
+              <th class="is-num">Stock</th>
+              <th>Status</th>
+              <th class="is-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in products %}
+              <tr>
+                <td>
+                  <div class="cell-product">
+                    <span class="cell-product__avatar">{{ product.name[0]|upper }}</span>
+                    <div>
+                      <span class="cell-product__name">{{ product.name }}</span>
+                      <span class="cell-product__sku">{{ product.sku }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="is-muted">{{ product.category_name or 'Uncategorised' }}</td>
+                <td class="is-muted">{{ product.supplier_name or '—' }}</td>
+                <td class="is-num">{{ product.cost_price|money }}</td>
+                <td class="is-num">{{ product.selling_price|money }}</td>
+                <td class="is-num"><strong>{{ product.quantity }}</strong> <span class="is-muted">{{ product.unit }}</span></td>
+                <td>
+                  {% if product.quantity == 0 %}
+                    <span class="pill pill--dark">Out of stock</span>
+                  {% elif product.quantity <= product.reorder_level %}
+                    <span class="pill pill--muted">Low stock</span>
+                  {% else %}
+                    <span class="pill pill--outline">In stock</span>
+                  {% endif %}
+                </td>
+                <td class="is-actions">
+                  <div class="row-actions">
+                    <a class="btn btn--ghost btn--sm" href="{{ url_for('products.edit', product_id=product.id) }}">Edit</a>
+                    <form method="post" action="{{ url_for('products.delete', product_id=product.id) }}"
+                          onsubmit="return confirm('Delete {{ product.name|e }}? Its stock history will also be removed.');">
+                      <button class="btn btn--quiet btn--sm" type="submit">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        <span class="empty__icon">{{ ui.icon('box', 22) }}</span>
+        <p class="empty__title">
+          {% if search or category_id or stock_filter %}No products match those filters{% else %}No products yet{% endif %}
+        </p>
+        <p class="empty__text">
+          {% if search or category_id or stock_filter %}
+            Try a different search or reset the filters.
+          {% else %}
+            Add your first product to start tracking stock.
+          {% endif %}
+        </p>
+        {% if not (search or category_id or stock_filter) %}
+          <p class="empty__action"><a class="btn btn--sm" href="{{ url_for('products.create') }}">+ Add product</a></p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

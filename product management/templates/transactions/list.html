@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Insights</p>
+      <h1 class="page-head__title">Transactions</h1>
+      <p class="page-head__subtitle">Purchases, sales and stock updates recorded by the system.</p>
+    </div>
+  </div>
+
+  <form class="toolbar" method="get" action="{{ url_for('transactions.index') }}">
+    <input class="input toolbar__search" type="search" name="q" value="{{ search }}"
+           placeholder="Search product, reference or note" aria-label="Search transactions">
+    <select class="input toolbar__select" name="type" aria-label="Filter by type">
+      <option value="">All types</option>
+      {% for value, label in types.items() %}
+        <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn--ghost" type="submit">Filter</button>
+    {% if search or type_filter %}
+      <a class="link-muted" href="{{ url_for('transactions.index') }}">Reset</a>
+    {% endif %}
+  </form>
+
+  <section class="card card--flush">
+    {% if transactions %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Product</th>
+              <th class="is-num">Quantity</th>
+              <th class="is-num">Unit price</th>
+              <th class="is-num">Total</th>
+              <th>Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for transaction in transactions %}
+              <tr>
+                <td class="is-muted">
+                  {{ transaction.created_at|datefmt }}
+                  <span class="cell-product__sku">{{ transaction.created_at|timefmt }}</span>
+                </td>
+                <td>
+                  <span class="pill
+                    {% if transaction.type in ('purchase', 'adjustment') %}pill--dark
+                    {% elif transaction.type in ('sale', 'stock_in') %}pill--outline
+                    {% else %}pill--muted{% endif %}">
+                    {{ types[transaction.type] }}
+                  </span>
+                </td>
+                <td>
+                  {% if transaction.product_name %}
+                    <span class="cell-product__name">{{ transaction.product_name }}</span>
+                    <span class="cell-product__sku">{{ transaction.sku }}</span>
+                  {% else %}
+                    <span class="is-muted">Deleted product</span>
+                  {% endif %}
+                </td>
+                <td class="is-num">{{ '+' if transaction.quantity > 0 else '' }}{{ transaction.quantity }}</td>
+                <td class="is-num">{{ transaction.unit_price|money }}</td>
+                <td class="is-num">{{ transaction.total_amount|money }}</td>
+                <td class="is-muted">{{ transaction.reference or '—' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        <span class="empty__icon">{{ ui.icon('receipt', 22) }}</span>
+        <p class="empty__title">No transactions recorded</p>
+        <p class="empty__text">Stock movements and received purchase orders appear here automatically.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

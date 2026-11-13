@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Procurement</p>
+      <h1 class="page-head__title">{{ 'Edit supplier' if mode == 'edit' else 'Add supplier' }}</h1>
+      <p class="page-head__subtitle">
+        {{ 'Update the contact details for this supplier.' if mode == 'edit' else 'Store the contact details for a new supplier.' }}
+      </p>
+    </div>
+  </div>
+
+  <form method="post" class="form-card">
+    <div class="form-card__head">
+      <h2>Supplier details</h2>
+      <p>Only the name is required.</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="name">Supplier name <span class="req">*</span></label>
+        <input class="input" id="name" name="name" value="{{ form.name }}" required maxlength="120">
+      </div>
+
+      <div class="field">
+        <label for="contact_person">Contact person</label>
+        <input class="input" id="contact_person" name="contact_person" value="{{ form.contact_person }}" maxlength="120">
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input class="input" id="email" name="email" type="email" value="{{ form.email }}" maxlength="120">
+      </div>
+
+      <div class="field">
+        <label for="phone">Phone</label>
+        <input class="input" id="phone" name="phone" value="{{ form.phone }}" maxlength="40">
+      </div>
+
+      <div class="field field--full">
+        <label for="address">Address</label>
+        <textarea class="input" id="address" name="address" rows="3">{{ form.address }}</textarea>
+      </div>
+    </div>
+
+    <div class="form-card__foot">
+      <a class="btn btn--ghost" href="{{ url_for('suppliers.index') }}">Cancel</a>
+      <button class="btn" type="submit">{{ 'Save changes' if mode == 'edit' else 'Add supplier' }}</button>
+    </div>
+  </form>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Inventory</p>
+      <h1 class="page-head__title">{{ 'Edit product' if mode == 'edit' else 'Add product' }}</h1>
+      <p class="page-head__subtitle">
+        {{ 'Update the details below.' if mode == 'edit' else 'Create a new product in your catalogue.' }}
+      </p>
+    </div>
+  </div>
+
+  {% if mode == 'edit' %}
+    <div class="note-box">
+      Current stock is <strong>{{ product.quantity }} {{ product.unit }}</strong>.
+      Use <a href="{{ url_for('stock.create', product=product.id) }}">Record movement</a> to change it, so every change stays in the history.
+    </div>
+  {% endif %}
+
+  <form method="post" class="form-card">
+    <div class="form-card__head">
+      <h2>Product details</h2>
+      <p>Fields marked with * are required.</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="name">Product name <span class="req">*</span></label>
+        <input class="input" id="name" name="name" value="{{ form.name }}" required maxlength="120">
+      </div>
+
+      <div class="field">
+        <label for="sku">SKU <span class="req">*</span></label>
+        <input class="input" id="sku" name="sku" value="{{ form.sku }}" required maxlength="60"
+               placeholder="e.g. SKU-1001">
+      </div>
+
+      <div class="field">
+        <label for="category_id">Category</label>
+        <select class="input" id="category_id" name="category_id">
+          <option value="">Uncategorised</option>
+          {% for category in categories %}
+            <option value="{{ category.id }}" {% if form.category_id == category.id|string %}selected{% endif %}>
+              {{ category.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="supplier_id">Supplier</label>
+        <select class="input" id="supplier_id" name="supplier_id">
+          <option value="">No supplier</option>
+          {% for supplier in suppliers %}
+            <option value="{{ supplier.id }}" {% if form.supplier_id == supplier.id|string %}selected{% endif %}>
+              {{ supplier.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="unit">Unit</label>
+        <input class="input" id="unit" name="unit" value="{{ form.unit }}" maxlength="20"
+               placeholder="pcs, box, kg">
+      </div>
+
+      <div class="field">
+        <label for="reorder_level">Reorder level</label>
+        <input class="input" id="reorder_level" name="reorder_level" type="number" min="0"
+               value="{{ form.reorder_level }}">
+        <p class="hint">Products at or below this level appear as low stock.</p>
+      </div>
+
+      <div class="field">
+        <label for="cost_price">Cost price</label>
+        <input class="input" id="cost_price" name="cost_price" type="number" min="0" step="0.01"
+               value="{{ form.cost_price }}">
+      </div>
+
+      <div class="field">
+        <label for="selling_price">Selling price</label>
+        <input class="input" id="selling_price" name="selling_price" type="number" min="0" step="0.01"
+               value="{{ form.selling_price }}">
+      </div>
+
+      {% if mode == 'create' %}
+        <div class="field">
+          <label for="quantity">Opening stock</label>
+          <input class="input" id="quantity" name="quantity" type="number" min="0"
+                 value="{{ form.quantity }}">
+          <p class="hint">Recorded as an opening stock movement.</p>
+        </div>
+      {% endif %}
+
+      <div class="field field--full">
+        <label for="description">Description</label>
+        <textarea class="input" id="description" name="description" rows="3"
+                  placeholder="Optional notes about this product">{{ form.description }}</textarea>
+      </div>
+    </div>
+
+    <div class="form-card__foot">
+      <a class="btn btn--ghost" href="{{ url_for('products.index') }}">Cancel</a>
+      <button class="btn" type="submit">{{ 'Save changes' if mode == 'edit' else 'Add product' }}</button>
+    </div>
+  </form>
+{% endblock %}

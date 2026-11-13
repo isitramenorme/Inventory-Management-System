@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Insights</p>
+      <h1 class="page-head__title">Reports</h1>
+      <p class="page-head__subtitle">Inventory valuation and stock statistics at a glance.</p>
+    </div>
+    <div class="page-head__actions">
+      <button class="btn btn--ghost" type="button" onclick="window.print()">Print report</button>
+    </div>
+  </div>
+
+  <section class="stats">
+    <article class="stat">
+      <div class="stat__top">
+        <span class="stat__icon">{{ ui.icon('box', 21) }}</span>
+        <span class="stat__label">Products</span>
+      </div>
+      <p class="stat__value">{{ summary.product_count|number }}</p>
+      <p class="stat__foot">{{ summary.supplier_count }} suppliers</p>
+    </article>
+
+    <article class="stat">
+      <div class="stat__top">
+        <span class="stat__icon">{{ ui.icon('layers', 21) }}</span>
+        <span class="stat__label">Units in stock</span>
+      </div>
+      <p class="stat__value">{{ summary.units|number }}</p>
+      <p class="stat__foot">{{ summary.low_stock }} low stock items</p>
+    </article>
+
+    <article class="stat">
+      <div class="stat__top">
+        <span class="stat__icon">{{ ui.icon('wallet', 21) }}</span>
+        <span class="stat__label">Stock value (cost)</span>
+      </div>
+      <p class="stat__value">{{ summary.cost_value|money }}</p>
+      <p class="stat__foot">What the current stock cost to buy</p>
+    </article>
+
+    <article class="stat">
+      <div class="stat__top">
+        <span class="stat__icon">{{ ui.icon('chart', 21) }}</span>
+        <span class="stat__label">Retail value</span>
+      </div>
+      <p class="stat__value">{{ summary.retail_value|money }}</p>
+      <p class="stat__foot">Potential margin {{ summary.potential_profit|money }}</p>
+    </article>
+  </section>
+
+  <div class="split split--even">
+    <section class="card card--flush">
+      <header class="card__head card__head--padded">
+        <div>
+          <h2 class="card__title">Inventory by category</h2>
+          <p class="card__subtitle">Units and value per category</p>
+        </div>
+      </header>
+
+      {% if categories %}
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th class="is-num">Products</th>
+                <th class="is-num">Units</th>
+                <th class="is-num">Cost value</th>
+                <th class="is-num">Retail value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for category in categories %}
+                <tr>
+                  <td>{{ category.name }}</td>
+                  <td class="is-num">{{ category.product_count }}</td>
+                  <td class="is-num">{{ category.units }}</td>
+                  <td class="is-num">{{ category.cost_value|money }}</td>
+                  <td class="is-num">{{ category.retail_value|money }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty empty--compact">
+          <p class="empty__text">No categories to summarise yet.</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="card card--flush">
+      <header class="card__head card__head--padded">
+        <div>
+          <h2 class="card__title">Top products by stock value</h2>
+          <p class="card__subtitle">Where most of your capital is held</p>
+        </div>
+      </header>
+
+      {% if top_products %}
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th class="is-num">Stock</th>
+                <th class="is-num">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in top_products %}
+                <tr>
+                  <td>
+                    <span class="cell-product__name">{{ product.name }}</span>
+                    <span class="cell-product__sku">{{ product.sku }}</span>
+                  </td>
+                  <td class="is-num">{{ product.quantity }} <span class="is-muted">{{ product.unit }}</span></td>
+                  <td class="is-num">{{ product.stock_value|money }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty empty--compact">
+          <p class="empty__text">Add products to see valuation data.</p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="split split--even">
+    <section class="card card--flush">
+      <header class="card__head card__head--padded">
+        <div>
+          <h2 class="card__title">Stock activity</h2>
+          <p class="card__subtitle">Last 30 days</p>
+        </div>
+      </header>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th class="is-num">Movements</th>
+              <th class="is-num">Units</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Stock in</td>
+              <td class="is-num">{{ movements.get('in', {}).get('count', 0) }}</td>
+              <td class="is-num">{{ movements.get('in', {}).get('units', 0) }}</td>
+            </tr>
+            <tr>
+              <td>Stock out</td>
+              <td class="is-num">{{ movements.get('out', {}).get('count', 0) }}</td>
+              <td class="is-num">{{ movements.get('out', {}).get('units', 0) }}</td>
+            </tr>
+            <tr>
+              <td>Adjustments</td>
+              <td class="is-num">{{ movements.get('adjustment', {}).get('count', 0) }}</td>
+              <td class="is-num">{{ movements.get('adjustment', {}).get('units', 0) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card--flush">
+      <header class="card__head card__head--padded">
+        <div>
+          <h2 class="card__title">Purchase orders</h2>
+          <p class="card__subtitle">Orders by status</p>
+        </div>
+      </header>
+
+      {% if order_status %}
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th class="is-num">Orders</th>
+                <th class="is-num">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in order_status %}
+                <tr>
+                  <td>{{ row.status|capitalize }}</td>
+                  <td class="is-num">{{ row.count }}</td>
+                  <td class="is-num">{{ row.total|money }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty empty--compact">
+          <p class="empty__text">No purchase orders yet.</p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="card card--flush">
+    <header class="card__head card__head--padded">
+      <div>
+        <h2 class="card__title">Low stock report</h2>
+        <p class="card__subtitle">Products at or below their reorder level</p>
+      </div>
+    </header>
+
+    {% if low_stock %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Category</th>
+              <th class="is-num">In stock</th>
+              <th class="is-num">Reorder level</th>
+              <th class="is-num">Shortfall</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in low_stock %}
+              <tr>
+                <td>
+                  <span class="cell-product__name">{{ product.name }}</span>
+                  <span class="cell-product__sku">{{ product.sku }}</span>
+                </td>
+                <td class="is-muted">{{ product.category_name or 'Uncategorised' }}</td>
+                <td class="is-num">{{ product.quantity }} <span class="is-muted">{{ product.unit }}</span></td>
+                <td class="is-num">{{ product.reorder_level }}</td>
+                <td class="is-num">{{ product.reorder_level - product.quantity }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty empty--compact">
+        <p class="empty__text">No low stock items. Everything is above its reorder level.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

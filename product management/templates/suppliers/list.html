@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Procurement</p>
+      <h1 class="page-head__title">Suppliers</h1>
+      <p class="page-head__subtitle">Keep contact details for the businesses you buy from.</p>
+    </div>
+    <div class="page-head__actions">
+      <a class="btn" href="{{ url_for('suppliers.create') }}">+ Add supplier</a>
+    </div>
+  </div>
+
+  <section class="card card--flush">
+    {% if suppliers %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Supplier</th>
+              <th>Contact</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th class="is-num">Products</th>
+              <th class="is-num">Orders</th>
+              <th class="is-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for supplier in suppliers %}
+              <tr>
+                <td>
+                  <div class="cell-product">
+                    <span class="cell-product__avatar">{{ supplier.name[0]|upper }}</span>
+                    <div>
+                      <span class="cell-product__name">{{ supplier.name }}</span>
+                      {% if supplier.address %}
+                        <span class="cell-product__sku">{{ supplier.address }}</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+                <td class="is-muted">{{ supplier.contact_person or '—' }}</td>
+                <td class="is-muted">{{ supplier.email or '—' }}</td>
+                <td class="is-muted">{{ supplier.phone or '—' }}</td>
+                <td class="is-num">{{ supplier.product_count }}</td>
+                <td class="is-num">{{ supplier.order_count }}</td>
+                <td class="is-actions">
+                  <div class="row-actions">
+                    <a class="btn btn--ghost btn--sm" href="{{ url_for('suppliers.edit', supplier_id=supplier.id) }}">Edit</a>
+                    <form method="post" action="{{ url_for('suppliers.delete', supplier_id=supplier.id) }}"
+                          onsubmit="return confirm('Delete {{ supplier.name|e }}? Linked products and orders will be kept.');">
+                      <button class="btn btn--quiet btn--sm" type="submit">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        <span class="empty__icon">{{ ui.icon('truck', 22) }}</span>
+        <p class="empty__title">No suppliers yet</p>
+        <p class="empty__text">Add a supplier so you can link products and raise purchase orders.</p>
+        <p class="empty__action"><a class="btn btn--sm" href="{{ url_for('suppliers.create') }}">+ Add supplier</a></p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

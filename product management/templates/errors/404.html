@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="error-page">
+    <p class="error-page__code">404</p>
+    <h1 class="error-page__title">Page not found</h1>
+    <p class="error-page__text">
+      The page you are looking for does not exist or may have moved. Use the link
+      below to return to the dashboard.
+    </p>
+    <p style="margin-top:14px;">
+      <a class="btn" href="{{ url_for('dashboard.dashboard') }}">Back to dashboard</a>
+    </p>
+  </div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="error-page">
+    <p class="error-page__code">500</p>
+    <h1 class="error-page__title">Something went wrong</h1>
+    <p class="error-page__text">
+      An unexpected error occurred while processing your request. Please try again,
+      and check the terminal window for details if the problem continues.
+    </p>
+    <p style="margin-top:14px;">
+      <a class="btn" href="{{ url_for('dashboard.dashboard') }}">Back to dashboard</a>
+    </p>
+  </div>
+{% endblock %}

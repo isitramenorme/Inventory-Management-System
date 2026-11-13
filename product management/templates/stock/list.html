@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% import 'partials/icons.html' as ui %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Inventory</p>
+      <h1 class="page-head__title">Stock movements</h1>
+      <p class="page-head__subtitle">Every addition, reduction and correction, in one audit trail.</p>
+    </div>
+    <div class="page-head__actions">
+      <a class="btn" href="{{ url_for('stock.create') }}">+ Record movement</a>
+    </div>
+  </div>
+
+  <div class="mini-stats">
+    <div class="mini-stat">
+      <span class="mini-stat__label">Total stock in</span>
+      <span class="mini-stat__value">{{ totals.in|number }}</span>
+    </div>
+    <div class="mini-stat">
+      <span class="mini-stat__label">Total stock out</span>
+      <span class="mini-stat__value">{{ totals.out|number }}</span>
+    </div>
+  </div>
+
+  <form class="toolbar" method="get" action="{{ url_for('stock.index') }}">
+    <select class="input toolbar__select" name="product" aria-label="Filter by product">
+      <option value="">All products</option>
+      {% for product in products %}
+        <option value="{{ product.id }}" {% if product_id == product.id|string %}selected{% endif %}>
+          {{ product.name }} ({{ product.sku }})
+        </option>
+      {% endfor %}
+    </select>
+    <select class="input toolbar__select" name="type" aria-label="Filter by movement type">
+      <option value="">All types</option>
+      <option value="in" {% if movement_type == 'in' %}selected{% endif %}>Stock in</option>
+      <option value="out" {% if movement_type == 'out' %}selected{% endif %}>Stock out</option>
+      <option value="adjustment" {% if movement_type == 'adjustment' %}selected{% endif %}>Adjustment</option>
+    </select>
+    <button class="btn btn--ghost" type="submit">Filter</button>
+    {% if product_id or movement_type %}
+      <a class="link-muted" href="{{ url_for('stock.index') }}">Reset</a>
+    {% endif %}
+  </form>
+
+  <section class="card card--flush">
+    {% if movements %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Product</th>
+              <th>Type</th>
+              <th class="is-num">Quantity</th>
+              <th>Reference</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movement in movements %}
+              <tr>
+                <td class="is-muted">
+                  {{ movement.created_at|datefmt }}
+                  <span class="cell-product__sku">{{ movement.created_at|timefmt }}</span>
+                </td>
+                <td>
+                  <span class="cell-product__name">{{ movement.product_name }}</span>
+                  <span class="cell-product__sku">{{ movement.sku }}</span>
+                </td>
+                <td>
+                  {% if movement.movement_type == 'in' %}
+                    <span class="pill pill--outline">Stock in</span>
+                  {% elif movement.movement_type == 'out' %}
+                    <span class="pill pill--muted">Stock out</span>
+                  {% else %}
+                    <span class="pill pill--dark">Adjustment</span>
+                  {% endif %}
+                </td>
+                <td class="is-num">
+                  {% if movement.movement_type == 'in' %}+{% elif movement.movement_type == 'out' %}&minus;{% endif %}{{ movement.quantity }}
+                  <span class="is-muted">{{ movement.unit }}</span>
+                </td>
+                <td class="is-muted">{{ movement.reference or '—' }}</td>
+                <td class="is-muted cell-note">{{ movement.note or '—' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        <span class="empty__icon">{{ ui.icon('swap', 22) }}</span>
+        <p class="empty__title">No stock movements yet</p>
+        <p class="empty__text">Record stock in, stock out or a stocktake adjustment to get started.</p>
+        <p class="empty__action"><a class="btn btn--sm" href="{{ url_for('stock.create') }}">+ Record movement</a></p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

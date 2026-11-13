@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="page-head__eyebrow">Inventory</p>
+      <h1 class="page-head__title">Record movement</h1>
+      <p class="page-head__subtitle">Add stock, reduce stock or correct a count.</p>
+    </div>
+  </div>
+
+  <form method="post" class="form-card">
+    <div class="form-card__head">
+      <h2>Stock movement</h2>
+      <p>All changes are logged in the transaction history.</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="field field--full">
+        <label for="product_id">Product <span class="req">*</span></label>
+        <select class="input" id="product_id" name="product_id" required>
+          <option value="">Select a product</option>
+          {% for product in products %}
+            <option value="{{ product.id }}"
+                    data-stock="{{ product.quantity }}"
+                    data-unit="{{ product.unit }}"
+                    {% if form.product_id == product.id|string %}selected{% endif %}>
+              {{ product.name }} ({{ product.sku }})
+            </option>
+          {% endfor %}
+        </select>
+        <p class="hint" id="stockHint"></p>
+      </div>
+
+      <div class="field">
+        <label for="movement_type">Movement type <span class="req">*</span></label>
+        <select class="input" id="movement_type" name="movement_type">
+          <option value="in" {% if form.movement_type == 'in' %}selected{% endif %}>Stock in (add)</option>
+          <option value="out" {% if form.movement_type == 'out' %}selected{% endif %}>Stock out (reduce)</option>
+          <option value="adjustment" {% if form.movement_type == 'adjustment' %}selected{% endif %}>Adjustment (stocktake)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="quantity" id="qtyLabel">Quantity <span class="req">*</span></label>
+        <input class="input" id="quantity" name="quantity" type="number" min="0"
+               value="{{ form.quantity }}" required>
+        <p class="hint" id="qtyHint"></p>
+      </div>
+
+      <div class="field" id="reasonField">
+        <label for="reason">Reason</label>
+        <select class="input" id="reason" name="reason">
+          {% for value, label in out_reasons.items() %}
+            <option value="{{ value }}" {% if form.reason == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <p class="hint">Sales are recorded separately in the transaction history.</p>
+      </div>
+
+      <div class="field">
+        <label for="reference">Reference</label>
+        <input class="input" id="reference" name="reference" value="{{ form.reference }}"
+               maxlength="60" placeholder="Invoice, PO or note number">
+      </div>
+
+      <div class="field field--full">
+        <label for="note">Note</label>
+        <textarea class="input" id="note" name="note" rows="2"
+                  placeholder="Optional detail about this movement">{{ form.note }}</textarea>
+      </div>
+    </div>
+
+    <div class="form-card__foot">
+      <a class="btn btn--ghost" href="{{ url_for('stock.index') }}">Cancel</a>
+      <button class="btn" type="submit">Save movement</button>
+    </div>
+  </form>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    (function () {
+      var product = document.getElementById("product_id");
+      var type = document.getElementById("movement_type");
+      var hint = document.getElementById("stockHint");
+      var qtyLabel = document.getElementById("qtyLabel");
+      var qtyHint = document.getElementById("qtyHint");
+      var reasonField = document.getElementById("reasonField");
+
+      function syncProduct() {
+        var option = product.options[product.selectedIndex];
+        var stock = option ? option.getAttribute("data-stock") : null;
+        var unit = option ? option.getAttribute("data-unit") : "";
+        hint.textContent = stock !== null
+          ? "Current stock: " + stock + " " + (unit || "")
+          : "";
+      }
+
+      function syncType() {
+        var value = type.value;
+        reasonField.hidden = value !== "out";
+        qtyLabel.innerHTML = value === "adjustment"
+          ? 'Counted quantity <span class="req">*</span>'
+          : 'Quantity <span class="req">*</span>';
+        qtyHint.textContent = value === "adjustment"
+          ? "Enter the total quantity you physically counted."
+          : value === "out"
+            ? "Cannot be more than the current stock."
+            : "How many units are being added.";
+      }
+
+      product.addEventListener("change", syncProduct);
+      type.addEventListener("change", syncType);
+      syncProduct();
+      syncType();
+    })();
+  </script>
+{% endblock %}
